@@ -1,0 +1,1 @@
+openassecondary --create_if_missing=true test_db/ldb-cmd007 test_db/ldb-cmd07

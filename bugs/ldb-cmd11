@@ -1,0 +1,5 @@
+opendb --create_if_missing=true test_db/ldb-cmd11
+wbwiput key1 value1
+wbwiput key2 value2
+wbwiput key3 value3
+wbwiiterator --iterate_upper_bound=key2 seektofirst next

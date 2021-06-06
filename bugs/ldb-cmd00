@@ -1,0 +1,2 @@
+opendb --create_if_missing=true --unordered_write=true --manual_wal_flush=true test_db/ldb-cmd00
+put key1 value1

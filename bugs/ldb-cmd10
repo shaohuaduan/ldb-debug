@@ -1,0 +1,8 @@
+opendb --create_if_missing=true test_db/ldb-cmd10
+putwithttl key1 value1
+putwithttl key2 value2
+putwithttl key3 value3
+deleterangewithttl key2 key3
+getwithttl key1
+getwithttl key2
+getwithttl key3

@@ -1,0 +1,4 @@
+opendb --create_if_missing=true test_db/ldb-cmd09
+compactrange nullptr nullptr
+close
+repairdb

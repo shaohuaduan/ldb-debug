@@ -1,0 +1,3 @@
+opendb --create_if_missing=true test_db/ldb-cmd02
+getreplaytimestamp
+comparetimestamps 16_4 16_5
