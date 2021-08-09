@@ -21,10 +21,11 @@ def build_parser():
     parser = argparse.ArgumentParser(description='Test Execution for Ldb-tool v1.0')
 
     # global args
-    parser.add_argument('--test_path', '-t', default='', help='Directory of the test files')
+    parser.add_argument('--test_path', '-p', default='', help='Directory of the test files')
     parser.add_argument('--demo', '-d', default='False', help='Create a demo test running time?')
     parser.add_argument('--start_file', '-s', default='0', required=False, help='Begin of test cases')
     parser.add_argument('--range_file', '-r', default='0', required=False, help='Range of test cases')
+    parser.add_argument('--test_type', '-t', default='rocksdb', required=False, help='Type of test to generate <{}>. (Default: rocksdb)'.format("/".join(VALID_TEST_TYPES)))
     return parser
 
 
@@ -33,9 +34,10 @@ def print_setup(parsed_args):
     print('='*20, 'Setup' , '='*20, '\n')
     print('{0:20}  {1}'.format('Test path', parsed_args.test_path))
     print('{0:20}  {1}'.format('Demo', parsed_args.demo))
-
+    print('{0:20}  {1}'.format('Test Type', parsed_args.test_type))
     print('{0:20}  {1}'.format('Begin test case', parsed_args.start_file))
     print('{0:20}  {1}'.format('Range test case', parsed_args.range_file))
+    
 
     print('\n', '='*48, '\n')
 
@@ -51,7 +53,7 @@ def print_log(log, demo, is_print = False):
     log_file_handle.write(log)
 
 
-def data_verify(kv_map, db_folder):
+def data_verify(kv_map, db_folder, test_type):
     global demo
     fail_flag = False
     print_log('kv_map: {0}\n'.format(kv_map), demo)
@@ -75,6 +77,8 @@ def data_verify(kv_map, db_folder):
         pass
         print_log('BrokenPipeError\n', demo)
     # p.stdin.flush()
+
+
     output = p.stdout.readline().decode("GBK")
     print_log(output, demo)
     if 'does not exist' not in output:
@@ -92,13 +96,16 @@ def data_verify(kv_map, db_folder):
                     pass
                     print_log('BrokenPipeError\n', demo)
                 # p.stdin.flush()
+
                 output = p.stdout.readline().decode("GBK")
+
                 print_log(output, demo)
                 output_status = output.split(':')[0].strip()
-                output_value = output.split(':')[1].strip()
-            
+                output_value = ''
+                if len(output.split(':')) > 2 :
+                    output_value = output.split(':')[1].strip()
                 # correct case 1: data key-value is deleted and should return 'NOT Found' status
-                if kv_map[key] == 'None' and output_status == 'NotFound': 
+                if kv_map[key] == 'None' and (output_status == 'NotFound' or output_status == 'Key not found'): 
                     pass
                 # correct case 2: data key-value is inserted and can access to and is correct value in db
                 elif kv_map[key] != 'None' and output_status == 'OK' and output_value == kv_map[key]: 
@@ -107,7 +114,10 @@ def data_verify(kv_map, db_folder):
                 else:
                     fail_flag = True
 
-            cmd_line = 'deletedb\n'
+                if test_type == VALID_TEST_TYPES[3]: # badgerdb
+                    cmd_line = 'close\n'
+                else: # rocksdb, leveldb, hyperleveldb
+                    cmd_line = 'deletedb\n'
             print_log('>>>>   {0}'.format(cmd_line), demo)
             p.stdin.write(cmd_line.encode("GBK"))
             try:
@@ -116,7 +126,10 @@ def data_verify(kv_map, db_folder):
                 pass
                 print_log('BrokenPipeError\n', demo)
             # p.stdin.flush()
+
+
             output = p.stdout.readline().decode("GBK")
+
             print_log(output, demo)
 
     cmd_line = 'exit\n'
@@ -186,6 +199,11 @@ def main():
     start_file = parsed_args.start_file
     range_file = int(parsed_args.range_file)
 
+    test_type = parsed_args.test_type
+    if test_type not in VALID_TEST_TYPES:
+        print("Invalid test type '{}'\nTest type must be one of <{}>".format(test_type, "/".join(VALID_TEST_TYPES)))
+        sys.exit(1)
+
     # Init report varient for the test suite
     fail_count = 0
     total_count = 0
@@ -249,13 +267,15 @@ def main():
                             pass
                             print_log('\nBrokenPipeError\n', demo)
                         # p.stdin.flush()
+
                         output = p.stdout.readline().decode("GBK")
                         print_log('\n{0}'.format(output), demo)
                         status = output.split(':')[0].strip()
-
+                        output_len = len(output.strip().split(':'))
+                        # print('output_len:  {0} \n'.format(output_len))
                         # data NotFound for iterator
-                        if cmd_line.split(' ')[0].strip() == 'iterator' and status == 'OK' and output.split(':')[1].strip() == ' ':
-                            status == 'NotFound'
+                        if cmd_line.split(' ')[0].strip() == 'iterator' and status == 'OK' and output_len == 1:
+                            status = 'NotFound'
 
                         if status == 'OK':
                             #print('{0}  {1}'.format('cmd_line.split(' ')[0]: ', cmd_line.split(' ')[0]))
@@ -321,7 +341,7 @@ def main():
                                         first = False
                                         continue
 
-                                    if cmd_line.split(' ')[-1].strip() == 'next' and key_prev < key:
+                                    if (cmd_line.split(' ')[-1].strip() == 'next' or cmd_line.split(' ')[-1].strip() == 'validforprefix' or cmd_line.split(' ')[-1].strip() == 'valid') and key_prev < key:
                                         pass
                                     elif cmd_line.split(' ')[-1].strip() == 'prev' and key_prev > key:
                                         pass
@@ -383,7 +403,7 @@ def main():
                     error_count += 1
                     error_list.append(files[file_index])
 
-                if data_verify(kv_map, files[file_index]):
+                if data_verify(kv_map, files[file_index], test_type):
                     print_log('{0} has NOT crash consistency!!!\n'.format(files[file_index]), demo)
                     fail_count += 1
                     fail_list.append(files[file_index])
@@ -408,7 +428,9 @@ def main():
                     pass
                     print_log('BrokenPipeError\n', demo)
                 # p.stdin.flush()
+                
                 output = p.stdout.readline().decode("GBK")
+                
                 print_log(output, demo)
                 status = output.split(':')[0].strip()
 
@@ -473,7 +495,7 @@ def main():
                                 first = False
                                 continue
 
-                            if cmd_line.split(' ')[-1].strip() == 'next' and key_prev < key:
+                            if (cmd_line.split(' ')[-1].strip() == 'next' or cmd_line.split(' ')[-1].strip() == 'validforprefix' or cmd_line.split(' ')[-1].strip() == 'valid') and key_prev < key:
                                 pass
                             elif cmd_line.split(' ')[-1].strip() == 'prev' and key_prev > key:
                                 pass
@@ -533,7 +555,7 @@ def main():
             error_count += 1
             error_list.append(test_path)
 
-        if data_verify(kv_map):
+        if data_verify(kv_map, test_type):
             print_log('{0} has NOT crash consistency!!!\n'.format(test_path), demo)
             fail_count += 1
             fail_list.append(test_path)

@@ -23,6 +23,7 @@ from collections import Counter
 from common import (ROCKSDB_COMMAND_SET, ROCKSDB_COMMAND_OPTIONS, ROCKSDB_COMMAND_OPTIONS_DEFAULT)
 from common import (LEVELDB_COMMAND_SET, LEVELDB_COMMAND_OPTIONS, LEVELDB_COMMAND_OPTIONS_DEFAULT)
 from common import (HYPERLEVELDB_COMMAND_SET, HYPERLEVELDB_COMMAND_OPTIONS, HYPERLEVELDB_COMMAND_OPTIONS_DEFAULT)
+from common import (BADGERDB_COMMAND_SET, BADGERDB_COMMAND_OPTIONS, BADGERDB_COMMAND_OPTIONS_DEFAULT)
 # Import list of all test seting
 from common import (VALID_TEST_WIDTH, VALID_TEST_TYPES, DB_PATH, DATA_PLAN, PRUNE_STRATEGY, OPENDB_OPTION_COMBIN_DEPTH)
 
@@ -35,8 +36,7 @@ def build_parser():
     parser.add_argument('--sequence_len', '-l', default='3', help='Total number of critical ops in the workload')
     parser.add_argument('--sequence_wid', '-w', default='2', help='Number of unique critical ops in the workload')
     parser.add_argument('--demo', '-d', default='False', help='Create a demo workload set?')
-    parser.add_argument('--test_type', '-t', default='rocksdb', required=False, 
-            help='Type of test to generate <{}>. (Default: Rocksdb)'.format("/".join(VALID_TEST_TYPES)))
+    parser.add_argument('--test_type', '-t', default='rocksdb', required=False, help='Type of test to generate <{}>. (Default: Rocksdb)'.format("/".join(VALID_TEST_TYPES)))
 
     return parser
 
@@ -89,6 +89,12 @@ def isCmdPruning(cmd_line, test_type, pruning_strat):
         if cmd_line[-1] != 'deletedb' or temp['deletedb'] != 1:
             return True
 
+    # the last Cmd line must be unique close
+    if 'unique_last_close' in pruning_strat:
+        temp = Counter(cmd_line)
+        if cmd_line[-1] != 'close' or temp['close'] != 1:
+            return True
+
     # the last Cmd line must be unique flushwal
     if 'unique_last_flushwal' in pruning_strat:
         temp = Counter(cmd_line)
@@ -124,8 +130,13 @@ def flatList(op_list):
 
 
 # Load data object to ops in the Ldb-tool file.
-def loadData(suit, data_plan):
+def loadData(suit, data_plan, test_type):
+
+    # rocksdb, leveldb, hyperleveldb
     seek_order_list = [['seektofirst', 'next'], ['seektolast', 'prev']]
+    if test_type == VALID_TEST_TYPES[3]: # badgerdb
+        seek_order_list = [['seektofirst', 'valid'], ['seektofirst', 'validforprefix']]
+
     for i in range(0, len(suit)):
         workload = list()
         key_int = 1
@@ -140,9 +151,9 @@ def loadData(suit, data_plan):
                 cmd_line.append(seek_order[0])
                 cmd_line.append(seek_order[1])
             elif cmd_line[0] == 'write':
-                kv1_int = random.randint(1, key_range)
-                kv2_int = random.randint(1, key_range)
-                kv3_int = random.randint(1, key_range)
+                kv1_int = random.randint(1, kv_range)
+                kv2_int = random.randint(1, kv_range)
+                kv3_int = random.randint(1, kv_range)
                 if kv1_int >= kv2_int:
                     for kv_int in range(kv1_int, kv2_int): 
                         key = 'key'+str(kv_int)
@@ -153,17 +164,18 @@ def loadData(suit, data_plan):
                         key = 'key'+str(kv_int)
                         value = 'value'+str(kv_int)
                         cmd_line.append('put:' + key + ':' + value)
-                cmd_line.append('delete:' + str(kv3_int))    
+                key = 'key'+str(kv3_int)
+                cmd_line.append('delete:' + key)    
             elif cmd_line[0] == 'get':
-                kv_int = random.randint(1, key_range)
+                kv_int = random.randint(1, kv_range)
                 key = 'key'+str(kv_int)
                 cmd_line.append(key)
             elif cmd_line[0] == 'delete':
-                kv_int = random.randint(1, key_range)
+                kv_int = random.randint(1, kv_range)
                 key = 'key'+str(kv_int)
                 cmd_line.append(key)
             elif cmd_line[0] == 'singledelete':
-                kv_int = random.randint(1, key_range)
+                kv_int = random.randint(1, kv_range)
                 key = 'key'+str(kv_int)
                 cmd_line.append(key)
             elif cmd_line[0] == 'put':
@@ -206,6 +218,9 @@ def formatLdbCmd(cmd_list, test_type):
     elif test_type == VALID_TEST_TYPES[2]:
         opt_list = HYPERLEVELDB_COMMAND_OPTIONS[command]
         default_list  = HYPERLEVELDB_COMMAND_OPTIONS_DEFAULT[command]
+    elif test_type == VALID_TEST_TYPES[3]:
+        opt_list = BADGERDB_COMMAND_OPTIONS[command]
+        default_list  = BADGERDB_COMMAND_OPTIONS_DEFAULT[command]
     else:
         print("Invalid test type '{}'\nTest type must be one of <{}>".format(test_type, "/".join(VALID_TEST_TYPES)))
         sys.exit(1)
@@ -302,6 +317,8 @@ def optionAssemble(cmd, test_type):
         opt_list = LEVELDB_COMMAND_OPTIONS[cmd]
     elif test_type == VALID_TEST_TYPES[2]:
         opt_list = HYPERLEVELDB_COMMAND_OPTIONS[cmd]
+    elif test_type == VALID_TEST_TYPES[3]:
+        opt_list = BADGERDB_COMMAND_OPTIONS[cmd]
     else:
         print("Invalid test type '{}'\nTest type must be one of <{}>".format(test_type, "/".join(VALID_TEST_TYPES)))
         sys.exit(1)
@@ -416,7 +433,7 @@ def doPermutation(cmd, num_ops, unq_ops, test_type, data_plan):
     # **PHASE 3** : Insert all data workload to the generated phase-2 workloads.
     suit_p3 = list()
     for i in data_plan:
-        suit = loadData(suit_p2, i)
+        suit = loadData(suit_p2, i, test_type)
         suit_p3.extend(suit)
     if demo:
         log = '\ntest suit in PHASE 3 = {0}\n'.format(suit_p3)
@@ -522,6 +539,8 @@ def main():
         test_cmd_set = LEVELDB_COMMAND_SET[unq_ops]
     elif test_type == VALID_TEST_TYPES[2]:
         test_cmd_set = HYPERLEVELDB_COMMAND_SET[unq_ops]
+    elif test_type == VALID_TEST_TYPES[3]:
+        test_cmd_set = BADGERDB_COMMAND_SET[unq_ops]
     else:
         print("Invalid test type '{}'\nTest type must be one of <{}>".format(test_type, "/".join(VALID_TEST_TYPES)))
         sys.exit(1)

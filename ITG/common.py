@@ -71,7 +71,6 @@ LEVELDB_COMMAND_SET = (
 #size_t block_size = 4 * 1024;
 #int block_restart_interval = 16;
 
-
 HYPERLEVELDB_COMMAND_OPTIONS = {'opendb': [\
 'create_if_missing',\
 'error_if_exists',\
@@ -108,6 +107,173 @@ HYPERLEVELDB_COMMAND_SET = (
     ('opendb', 'deletedb', 'put', 'get', 'delete', 'iterator'),
     ('opendb', 'deletedb', 'put', 'get', 'delete', 'iterator', 'write')
 )
+
+
+###################################
+## Badgerdb Function Options ##
+###################################
+
+#Dir      string
+#ValueDir string
+#SyncWrites        bool
+#NumVersionsToKeep int
+#ReadOnly          bool
+#Logger            Logger
+#Compression       options.CompressionType
+#InMemory          bool
+#MetricsEnabled    bool
+#NumGoroutines int
+#MemTableSize        int64
+#BaseTableSize       int64
+#BaseLevelSize       int64
+#LevelSizeMultiplier int
+#TableSizeMultiplier int
+#MaxLevels           int
+#VLogPercentile float64
+#ValueThreshold int64
+#NumMemtables   int
+#BlockSize          int
+#BloomFalsePositive float64
+#BlockCacheSize     int64
+#IndexCacheSize     int64
+#NumLevelZeroTables      int
+#NumLevelZeroTablesStall int
+#ValueLogFileSize   int64
+#ValueLogMaxEntries uint32
+#NumCompactors        int
+#CompactL0OnClose     bool
+#LmaxCompaction       bool
+#ZSTDCompressionLevel int
+#VerifyValueChecksum bool
+#EncryptionKey                 []byte
+#EncryptionKeyRotationDuration time.Duration
+#BypassLockGuard bool
+#ChecksumVerificationMode options.ChecksumVerificationMode
+#AllowStopTheWorld bool
+#DetectConflicts bool
+#NamespaceOffset int
+#managedTxns bool
+#maxBatchCount int64 // max entries in batch
+#maxBatchSize  int64 // max batch size in bytes
+#maxValueThreshold float64
+
+## in default function but not in with function
+# TableSizeMultiplier: 2,
+# Logger: defaultLogger(INFO),
+
+## in with function but not in default function
+# "ReadOnly"
+# "LoggingLevel"
+# "ChecksumVerificationMode"
+# "InMemory"
+# "BypassLockGuard"
+
+## not in with function and not in default function
+#LmaxCompaction       bool
+#managedTxns bool
+#maxBatchCount int64 // max entries in batch
+#maxBatchSize  int64 // max batch size in bytes
+#maxValueThreshold float64
+
+# BADGERDB_COMMAND_OPTIONS = {'opendb': ['LmaxCompaction','TableSizeMultiplier'],'delete': [None], 'close': [None], 'put': [None], 'get': [None], 'write': [None], 'iterator': [None]}
+# BADGERDB_COMMAND_OPTIONS_DEFAULT = {'opendb': [['false',], ['false',]],'delete': [None], 'close': [None], 'put': [None], 'get': [None], 'write': [None], 'iterator': [None]}
+
+BADGERDB_COMMAND_OPTIONS = {'opendb': [\
+'ValueDir',\
+'SyncWrites',\
+'NumVersionsToKeep',\
+'NumGoroutines',\
+'ReadOnly',\
+'MetricsEnabled',\
+'LoggingLevel',\
+'BaseTableSize',\
+'LevelSizeMultiplier',\
+'MaxLevels',\
+'ValueThreshold',\
+'VLogPercentile',\
+'NumMemtables',\
+'MemTableSize',\
+'BloomFalsePositive',\
+'BlockSize',\
+'NumLevelZeroTables',\
+'NumLevelZeroTablesStall',\
+'BaseLevelSize',\
+'ValueLogFileSize',\
+'ValueLogMaxEntries',\
+'NumCompactors',\
+'CompactL0OnClose',\
+'EncryptionKey',\
+'EncryptionKeyRotationDuration',\
+'Compression',\
+'VerifyValueChecksum',\
+'ChecksumVerificationMode',\
+'AllowStopTheWorld',\
+'BlockCacheSize',\
+'InMemory',\
+'ZSTDCompressionLevel',\
+'BypassLockGuard',\
+'IndexCacheSize',\
+'DetectConflicts',\
+'NamespaceOffset',\
+'TableSizeMultiplier',\
+'LmaxCompaction'],\
+'delete': [None], 'close': [None], 'put': [None], 'get': [None], 'write': [None], 'iterator': [None]}
+
+BADGERDB_COMMAND_OPTIONS_DEFAULT = {'opendb': [\
+[None],\
+['false',],\
+['1',],\
+['8',],\
+['false',],\
+['true',],\
+[None],\
+['2097152',],\
+['10',],\
+['7',],\
+['maxValueThreshold',],\
+['0.0',],\
+['15',],\
+['67108864',],\
+['0.01',],\
+['4096',],\
+['5',],\
+['15',],\
+['10485760',],\
+['1073741823',],\
+['1000000',],\
+['4',],\
+['false',],\
+['[]byte{}',],\
+['240',],\
+['Snappy',],\
+['false',],\
+['NoVerification',],\
+['true',],\
+['268435456',],\
+['false',],\
+['1',],\
+['false',],\
+['0',],\
+['true',],\
+['-1',],\
+['2',]
+['false',]],\
+'delete': [None], 'close': [None], 'put': [None], 'get': [None], 'write': [None], 'iterator': [None]}
+
+
+# Set of commands to be used in test generation.
+# We currently support : open db, delete db, put, get, delete, iterator
+BADGERDB_COMMAND_SET = (
+    ('opendb', 'close'), 
+    ('opendb', 'close'), 
+    ('opendb', 'write'), 
+    ('opendb', 'iterator', 'put'), 
+    ('opendb', 'delete', 'put', 'get'), 
+    ('opendb', 'close', 'put', 'get', 'delete'),
+    ('opendb', 'close', 'put', 'get', 'delete', 'iterator'),
+    ('opendb', 'close', 'put', 'get', 'delete', 'iterator', 'write')
+)
+
 
 
 ##############################
@@ -320,7 +486,7 @@ OPENDB_OPTION_COMBIN_DEPTH = 3
 VALID_TEST_WIDTH = (2, 3, 4, 5, 6, 7, 8, 9)
 
 # Set of db-system to be used in test generation.
-VALID_TEST_TYPES = ('rocksdb', 'leveldb', 'hyperleveldb')
+VALID_TEST_TYPES = ('rocksdb', 'leveldb', 'hyperleveldb', 'badgerdb')
 
 DB_PATH = 'test_db'
 
