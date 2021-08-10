@@ -25,8 +25,9 @@ func Opendb(cmdSplits []string) *badger.DB {
             if cmdTokenIndex == 1 {
                 //fmt.Printf("Ldb Command key: %s \n", cmdSplits[i])
                 cmdTokenIndex++
-                opt = badger.DefaultOptions(cmdSplits[i]).WithLogger(nil)
-                // opt.WithLoggingLevel(defaultLogger(ERROR))
+                //opt = badger.DefaultOptions(cmdSplits[i]).WithLogger(nil)
+                opt = badger.DefaultOptions(cmdSplits[i])
+                // opt = opt.WithLoggingLevel(defaultLogger(ERROR))
                 break
             } 
             cmdTokenIndex++
@@ -42,160 +43,161 @@ func Opendb(cmdSplits []string) *badger.DB {
             //fmt.Printf("option key: %s, value: %s \n", optionArray[0], optionArray[1])
             switch optionArray[0] {
             case "ValueDir": //ValueDir
-                opt.WithValueDir(optionArray[1])
+                opt = opt.WithValueDir(optionArray[1])
             case "SyncWrites": //SyncWrites
                 syncwrites, _ := strconv.ParseBool(optionArray[1])
-                opt.WithSyncWrites(syncwrites)
+                opt = opt.WithSyncWrites(syncwrites)
             case "NumVersionsToKeep": //NumVersionsToKeep
                 numVersionsToKeep, _ := strconv.Atoi(optionArray[1])
-                opt.WithNumVersionsToKeep(numVersionsToKeep)
+                opt = opt.WithNumVersionsToKeep(numVersionsToKeep)
             case "NumGoroutines": //NumGoroutines
                 numGoroutines, _ := strconv.Atoi(optionArray[1])
-                opt.WithNumGoroutines(numGoroutines)
+                opt = opt.WithNumGoroutines(numGoroutines)
             case "ReadOnly": //ReadOnly
                 readOnly, _ := strconv.ParseBool(optionArray[1])
-                opt.WithReadOnly(readOnly)
+                //fmt.Printf("readOnly Options: %t\n", readOnly)
+                opt = opt.WithReadOnly(readOnly)
             case "MetricsEnabled": //MetricsEnabled
                 metricsEnabled, _ := strconv.ParseBool(optionArray[1])
-                opt.WithMetricsEnabled(metricsEnabled)
+                opt = opt.WithMetricsEnabled(metricsEnabled)
             case "Logger": //Logger
                 switch optionArray[1] {
                     case "DEBUG": //DEBUG
-                        opt.WithLoggingLevel(badger.DEBUG)
+                        opt = opt.WithLoggingLevel(badger.DEBUG)
                     case "INFO": //INFO
-                        opt.WithLoggingLevel(badger.INFO)
+                        opt = opt.WithLoggingLevel(badger.INFO)
                     case "WARNING": //WARNING
-                        opt.WithLoggingLevel(badger.WARNING)
+                        opt = opt.WithLoggingLevel(badger.WARNING)
                     case "ERROR": //ERROR
-                        opt.WithLoggingLevel(badger.ERROR)
+                        opt = opt.WithLoggingLevel(badger.ERROR)
                     default:
                         fmt.Printf("(Ldb-Tool) Invalid Options: %s\n", cmdSplits[i])
                         return nil
                 }
-                //opt.WithLogger(badger.defaultLogger(badger.DEBUG))
+                //opt = opt.WithLogger(badger.defaultLogger(badger.DEBUG))
             case "LoggingLevel": //LoggingLevel
                 switch optionArray[1] {
                     case "DEBUG": //DEBUG
-                        opt.WithLoggingLevel(badger.DEBUG)
+                        opt = opt.WithLoggingLevel(badger.DEBUG)
                     case "INFO": //INFO
-                        opt.WithLoggingLevel(badger.INFO)
+                        opt = opt.WithLoggingLevel(badger.INFO)
                     case "WARNING": //WARNING
-                        opt.WithLoggingLevel(badger.WARNING)
+                        opt = opt.WithLoggingLevel(badger.WARNING)
                     case "ERROR": //ERROR
-                        opt.WithLoggingLevel(badger.ERROR)
+                        opt = opt.WithLoggingLevel(badger.ERROR)
                     default:
                         fmt.Printf("(Ldb-Tool) Invalid Options: %s\n", cmdSplits[i])
                         return nil
             }
             case "BaseTableSize": //BaseTableSize
                 baseTableSize, _ := strconv.ParseInt(optionArray[1], 10, 64)
-                opt.WithBaseTableSize(baseTableSize)
+                opt = opt.WithBaseTableSize(baseTableSize)
             case "LevelSizeMultiplier": //LevelSizeMultiplier
                 levelSizeMultiplier, _ := strconv.Atoi(optionArray[1])
-                opt.WithLevelSizeMultiplier(levelSizeMultiplier)
+                opt = opt.WithLevelSizeMultiplier(levelSizeMultiplier)
             case "MaxLevels": //MaxLevels
                 maxLevels, _ := strconv.Atoi(optionArray[1])
-                opt.WithMaxLevels(maxLevels)
+                opt = opt.WithMaxLevels(maxLevels)
             case "ValueThreshold": //ValueThreshold
                 valueThreshold, _ := strconv.ParseInt(optionArray[1], 10, 64)
-                opt.WithValueThreshold(valueThreshold)
+                opt = opt.WithValueThreshold(valueThreshold)
             case "VLogPercentile": //VLogPercentile
                 vLogPercentile, _ := strconv.ParseFloat(optionArray[1], 64)
-                opt.WithVLogPercentile(vLogPercentile)
+                opt = opt.WithVLogPercentile(vLogPercentile)
             case "NumMemtables": //NumMemtables
                 numMemtables, _ := strconv.Atoi(optionArray[1])
-                opt.WithNumMemtables(numMemtables)
+                opt = opt.WithNumMemtables(numMemtables)
             case "MemTableSize": //MemTableSize
                 memTableSize, _ := strconv.ParseInt(optionArray[1], 10, 64)
-                opt.WithMemTableSize(memTableSize)
+                opt = opt.WithMemTableSize(memTableSize)
             case "BloomFalsePositive": //BloomFalsePositive
                 bloomFalsePositive, _ := strconv.ParseFloat(optionArray[1], 64)
-                opt.WithBloomFalsePositive(bloomFalsePositive)
+                opt = opt.WithBloomFalsePositive(bloomFalsePositive)
             case "BlockSize": //BlockSize
                 blockSize, _ := strconv.Atoi(optionArray[1])
-                opt.WithBlockSize(blockSize)
+                opt = opt.WithBlockSize(blockSize)
             case "NumLevelZeroTables": //NumLevelZeroTables
                 numLevelZeroTables, _ := strconv.Atoi(optionArray[1])
-                opt.WithNumLevelZeroTables(numLevelZeroTables)
+                opt = opt.WithNumLevelZeroTables(numLevelZeroTables)
             case "NumLevelZeroTablesStall": //NumLevelZeroTablesStall
                 numLevelZeroTablesStall, _ := strconv.Atoi(optionArray[1])
-                opt.WithNumLevelZeroTablesStall(numLevelZeroTablesStall)
+                opt = opt.WithNumLevelZeroTablesStall(numLevelZeroTablesStall)
             case "BaseLevelSize": //BaseLevelSize
                 baseLevelSize, _ := strconv.ParseInt(optionArray[1], 10, 64)
-                opt.WithBaseLevelSize(baseLevelSize)
+                opt = opt.WithBaseLevelSize(baseLevelSize)
             case "ValueLogFileSize": //ValueLogFileSize
                 valueLogFileSize, _ := strconv.ParseInt(optionArray[1], 10, 64)
-                opt.WithValueLogFileSize(valueLogFileSize)
+                opt = opt.WithValueLogFileSize(valueLogFileSize)
             case "ValueLogMaxEntries": //ValueLogMaxEntries
                 valueLogMaxEntries, _ := strconv.ParseInt(optionArray[1], 10, 32)
-                opt.WithValueLogMaxEntries(uint32(valueLogMaxEntries))
+                opt = opt.WithValueLogMaxEntries(uint32(valueLogMaxEntries))
             case "NumCompactors": //NumCompactors
                 numCompactors, _ := strconv.Atoi(optionArray[1])
-                opt.WithNumCompactors(numCompactors)
+                opt = opt.WithNumCompactors(numCompactors)
             case "CompactL0OnClose": //CompactL0OnClose
                 compactL0OnClose, _ := strconv.ParseBool(optionArray[1])
-                opt.WithCompactL0OnClose(compactL0OnClose)
+                opt = opt.WithCompactL0OnClose(compactL0OnClose)
             case "EncryptionKey": //EncryptionKey
                 //encryptionkey, _ := 
-                opt.WithEncryptionKey([]byte(optionArray[1]))
+                opt = opt.WithEncryptionKey([]byte(optionArray[1]))
             case "EncryptionKeyRotationDuration": //EncryptionKeyRotationDuration
                 encryptionKeyRotationDuration, _ := strconv.ParseInt(optionArray[1], 10, 64)
-                opt.WithEncryptionKeyRotationDuration(time.Duration(encryptionKeyRotationDuration) * time.Hour)
+                opt = opt.WithEncryptionKeyRotationDuration(time.Duration(encryptionKeyRotationDuration) * time.Hour)
             case "Compression": //Compression
-                //opt.WithCompression(optionArray[1])
+                //opt = opt.WithCompression(optionArray[1])
                 switch optionArray[1] {
                     case "None": //None
-                        opt.WithCompression(options.None)
+                        opt = opt.WithCompression(options.None)
                     case "Snappy": //Snappy
-                        opt.WithCompression(options.Snappy)
+                        opt = opt.WithCompression(options.Snappy)
                     case "ZSTD": //ZSTD
-                        opt.WithCompression(options.ZSTD)
+                        opt = opt.WithCompression(options.ZSTD)
                     default:
                         fmt.Printf("(Ldb-Tool) Invalid Options: %s\n", cmdSplits[i])
                         return nil
             }
             case "VerifyValueChecksum": //VerifyValueChecksum
                 verifyValueChecksum, _ := strconv.ParseBool(optionArray[1])
-                opt.WithVerifyValueChecksum(verifyValueChecksum)
+                opt = opt.WithVerifyValueChecksum(verifyValueChecksum)
             case "ChecksumVerificationMode": //ChecksumVerificationMode
-                //opt.WithChecksumVerificationMode(optionArray[1])
+                //opt = opt.WithChecksumVerificationMode(optionArray[1])
                 switch optionArray[1] {
                     case "NoVerification": //NoVerification
-                        opt.WithChecksumVerificationMode(options.NoVerification)
+                        opt = opt.WithChecksumVerificationMode(options.NoVerification)
                     case "OnTableRead": //OnTableRead
-                        opt.WithChecksumVerificationMode(options.OnTableRead)
+                        opt = opt.WithChecksumVerificationMode(options.OnTableRead)
                     case "OnBlockRead": //OnBlockRead
-                        opt.WithChecksumVerificationMode(options.OnBlockRead)
+                        opt = opt.WithChecksumVerificationMode(options.OnBlockRead)
                     case "OnTableAndBlockRead": //OnTableAndBlockRead
-                        opt.WithChecksumVerificationMode(options.OnTableAndBlockRead)
+                        opt = opt.WithChecksumVerificationMode(options.OnTableAndBlockRead)
                     default:
                         fmt.Printf("(Ldb-Tool) Invalid Options: %s\n", cmdSplits[i])
                         return nil
             }
             case "AllowStopTheWorld": //AllowStopTheWorld
                 allowStopTheWorld, _ := strconv.ParseBool(optionArray[1])
-                opt.WithAllowStopTheWorld(allowStopTheWorld)
+                opt = opt.WithAllowStopTheWorld(allowStopTheWorld)
             case "BlockCacheSize": //BlockCacheSize
                 blockCacheSize, _ := strconv.ParseInt(optionArray[1], 10, 64)
-                opt.WithBlockCacheSize(blockCacheSize)
+                opt = opt.WithBlockCacheSize(blockCacheSize)
             case "InMemory": //InMemory
                 inMemory, _ := strconv.ParseBool(optionArray[1])
-                opt.WithInMemory(inMemory)
+                opt = opt.WithInMemory(inMemory)
             case "ZSTDCompressionLevel": //ZSTDCompressionLevel
                 zSTDCompressionLevel, _ := strconv.Atoi(optionArray[1])
-                opt.WithZSTDCompressionLevel(zSTDCompressionLevel)
+                opt = opt.WithZSTDCompressionLevel(zSTDCompressionLevel)
             case "BypassLockGuard": //BypassLockGuard
                 bypassLockGuard, _ := strconv.ParseBool(optionArray[1])
-                opt.WithBypassLockGuard(bypassLockGuard)
+                opt = opt.WithBypassLockGuard(bypassLockGuard)
             case "IndexCacheSize": //IndexCacheSize
                 indexCacheSize, _ := strconv.ParseInt(optionArray[1], 10, 64)
-                opt.WithIndexCacheSize(indexCacheSize)
+                opt = opt.WithIndexCacheSize(indexCacheSize)
             case "DetectConflicts": //DetectConflicts
                 detectConflicts, _ := strconv.ParseBool(optionArray[1])
-                opt.WithDetectConflicts(detectConflicts)
+                opt = opt.WithDetectConflicts(detectConflicts)
             case "NamespaceOffset": //NamespaceOffset
                 namespaceOffset, _ := strconv.Atoi(optionArray[1])
-                opt.WithNamespaceOffset(namespaceOffset)
+                opt = opt.WithNamespaceOffset(namespaceOffset)
             case "TableSizeMultiplier": //TableSizeMultiplier
                 tableSizeMultiplier, _ := strconv.Atoi(optionArray[1])
                 opt.TableSizeMultiplier = tableSizeMultiplier
