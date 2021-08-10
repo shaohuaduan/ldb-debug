@@ -25,9 +25,9 @@ func Opendb(cmdSplits []string) *badger.DB {
             if cmdTokenIndex == 1 {
                 //fmt.Printf("Ldb Command key: %s \n", cmdSplits[i])
                 cmdTokenIndex++
-                //opt = badger.DefaultOptions(cmdSplits[i]).WithLogger(nil)
-                opt = badger.DefaultOptions(cmdSplits[i])
-                // opt = opt.WithLoggingLevel(defaultLogger(ERROR))
+                opt = badger.DefaultOptions(cmdSplits[i]).WithLogger(nil)
+                //opt = badger.DefaultOptions(cmdSplits[i])
+                //opt = opt.WithLoggingLevel(defaultLogger(ERROR))
                 break
             } 
             cmdTokenIndex++
