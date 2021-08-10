@@ -1,4 +1,4 @@
 opendb --create_if_missing=true test_db/ldb-cmd08
-put key1 value1
-deleterange key2 key1
-deleterange key1 key2
+compactrange nullptr nullptr
+close
+repairdb

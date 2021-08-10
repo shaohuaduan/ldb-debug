@@ -1,3 +1,6 @@
 opendb --create_if_missing=true test_db/ldb-cmd02
-getreplaytimestamp
-comparetimestamps 16_4 16_5
+put key1 value1
+put key2 value2
+put key3 value3
+iterator --iter_start_seqnum=1 seektofirst next
+iterator --iter_start_seqnum=1 seektolast prev

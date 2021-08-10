@@ -1,2 +1,3 @@
-opendbwithttl --create_if_missing=true test_db/ldb-cmd12
-closewithttl
+opendb --create_if_missing=true test_db/ldb-cmd12
+getreplaytimestamp
+validatetimestamp 16_4

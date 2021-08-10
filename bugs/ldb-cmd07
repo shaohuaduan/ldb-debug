@@ -1,1 +1,4 @@
-openassecondary --create_if_missing=true test_db/ldb-cmd007 test_db/ldb-cmd07
+opendb --create_if_missing=true test_db/ldb-cmd07
+put key1 value1
+deleterange key2 key1
+deleterange key1 key2

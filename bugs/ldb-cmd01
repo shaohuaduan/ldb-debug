@@ -1,3 +1,1 @@
-opendb --create_if_missing=true test_db/ldb-cmd01
-getreplaytimestamp
-validatetimestamp 16_4
+opendb --create_if_missing=true --table_cache_numshardbits=20 test_db/ldb-cmd01

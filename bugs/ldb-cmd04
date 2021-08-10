@@ -1,1 +1,5 @@
-opendb --create_if_missing=true --table_cache_numshardbits=20 test_db/ldb-cmd04
+opendb --create_if_missing=true test_db/ldb-cmd04
+wbwiput key1 value1
+wbwiput key2 value2
+wbwiput key3 value3
+wbwiiterator --iterate_upper_bound=key2 seektofirst next
